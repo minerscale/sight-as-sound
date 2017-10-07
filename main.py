@@ -1,5 +1,8 @@
 #! /usr/bin/env python
 
+# I used python 3.6 with an Anaconda install on Linux to make this.
+# If you don't use all of those, your mileage may vary.
+
 # Change these:
 # The input file must be grayscale
 input_file = 'mushroom.png'
@@ -15,7 +18,7 @@ lowest_frequency = 220 # In hz!
 # Find the highest frequency with this:
 # 2**(255/frequency_n)*lowest_frequency
 # That puts the max frequency at just under 2562hz
-frequency_n = 72 # Not in hz!s
+frequency_n = 72 # Not in hz!
 
 # ===========================================================================
 
@@ -49,6 +52,8 @@ x,y = img.size
 if ((x != y) or (checkPowerOf2(x) == False)):
 	exit("The image has to be a power of 2.")
 
+
+print ("Serialising pixels...")
 # Here's where it gets interesting.
 # We create the output list
 output = []
@@ -62,21 +67,29 @@ for i in range(0,x**2):
 	# And thus serialise a 2d plane.
 	output.append(pixels[hilbert])
 
+print ("Generating audio...")
 # Generate the Audio output list
 outputAudio = [0]*(44100*num_seconds)
 
+pixel_count = 0
 # Iterate over every sing pixel in the list
 for pixel in output:
+	if pixel_count % 10 == 0:
+		print (pixel_count," pixels completed.")
+	pixel_count += 1
+
+	# I'm mapping the audio exponetially instead of linearly becase that's the way
+	# The human ear works. That made the most sence to me.
+	# The way I mapped those frequencies is arbitary, except that I tried to make it
+	# so the frequencies were within the loudest part of human hearing ~ 220hz to 2561hz
+	frequency = 2**(pixel/frequency_n)*lowest_frequency;
 	for t in range(0,len(outputAudio)):
 		# Constantly layer the audio on top of one another until it's complete
-		# I'm mapping the audio exponetially instead of linearly becase that's the way
-		# The human ear works. That made the most sence to me.
-		# The way I mapped those frequencies is arbitary, except that I tried to make it
-		# so the frequencies were within the loudest part of human hearing ~ 220hz to 2561hz
 		# We use a really big offset to t becuase if we don't we get a really weird tone that quickly
 		# Tapers off. If you can figure out why this is I'll be really happy
-		outputAudio[t] += generateSine(2**(pixel/frequency_n)*lowest_frequency,1/(x*y/2),t+524288)
+		outputAudio[t] += generateSine(frequency,1/(x*y/2),t+524288)
 
+print("Converting...")
 # Do some conversion work. At the moment the audio is between -1 and 1
 # I need to map -1 and 1 to 0 and 65536
 for i in range(0,len(outputAudio)):
@@ -90,6 +103,8 @@ for i in range(0,len(outputAudio)):
 	# Convert it to an integer so to_bytes doesn't throw a hissy fit
 	outputAudio[i] = int(outputAudio[i])
 
+
+print("Writing file to disk, also converting the sound data to bytes.")
 # Open the output file
 audio_output = wave.open(output_wav, 'w')
 # Set it to one channed 16bit 44100hz no compression
