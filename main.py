@@ -5,8 +5,8 @@
 
 # Change these:
 # The input file must be grayscale
-input_file = 'mushroom.png'
-output_wav = 'output.wav'
+input_file = 'shrooming.png'
+output_wav = 'shrooming.wav'
 
 # Keep this number low.
 # It takes ages to generate
@@ -75,7 +75,7 @@ pixel_count = 0
 # Iterate over every sing pixel in the list
 for pixel in output:
 	if pixel_count % 10 == 0:
-		print (pixel_count," pixels completed.")
+		print (pixel_count,"pixels completed out of", x*y, "          ", end="\r")
 	pixel_count += 1
 
 	# I'm mapping the audio exponetially instead of linearly becase that's the way
